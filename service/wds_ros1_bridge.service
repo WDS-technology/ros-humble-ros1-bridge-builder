@@ -1,0 +1,22 @@
+# /etc/systemd/system/wds_ros1_bridge.service
+[Unit]
+Description=ROS 1 ↔ ROS 2 Bridge (Docker Compose)
+After=network.target docker.service corvus_roscore.service
+Requires=docker.service corvus_roscore.service
+
+[Service]
+# ‘simple’ is the default; keeping it explicit for clarity
+Type=simple
+WorkingDirectory=/home/root/wds/wds_tools_ws/src/ros-humble-ros1-bridge-builder
+
+# Run **without -d** so Compose stays in the foreground
+ExecStart=/usr/bin/docker compose up --pull=always --quiet-pull
+# When the unit is stopped, tear everything down cleanly
+ExecStop=/usr/bin/docker compose down --remove-orphans
+
+Environment="HOME=/home/root"
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target

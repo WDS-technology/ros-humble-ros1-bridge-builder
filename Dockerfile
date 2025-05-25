@@ -230,6 +230,18 @@ RUN                                                                             
     time MAKEFLAGS="-j $MIN" colcon build --event-handlers console_direct+      \
       --cmake-args -DCMAKE_BUILD_TYPE=Release 
 
+
+
+###########################
+# 8 -b Cyclone
+###########################
+RUN apt-get update && \
+    apt-get install -y ros-humble-rmw-cyclonedds-cpp && \
+    apt-get clean
+
+# Set CycloneDDS as the default RMW implementation
+ENV RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+
 ###########################
 # 8.) Clean up
 ###########################

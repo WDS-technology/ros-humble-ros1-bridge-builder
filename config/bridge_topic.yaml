@@ -1,0 +1,157 @@
+topics:
+  - topic: /voxl/pose/local
+    type: geometry_msgs/msg/PoseStamped
+    queue_size: 10
+    qos:
+      reliability: reliable
+      durability: volatile
+      
+  - topic: /corvus/pose/fixed 
+    type: geometry_msgs/msg/PoseStamped
+    queue_size: 10
+    qos:
+      reliability: reliable
+      durability: volatile
+
+  - topic: /corvus/state
+    type: std_msgs/msg/String
+    queue_size: 5
+    qos:
+      reliability: reliable
+      durability: volatile
+      
+
+  - topic: /corvus/powermodule/battery
+    type: sensor_msgs/msg/BatteryState
+    queue_size: 10
+
+  - topic: /corvus/payload/set_recording
+    type: std_msgs/msg/Bool
+    queue_size: 5
+    qos:
+      reliability: reliable
+      durability: volatile
+      
+  
+  - topic: /corvus/is_armed
+    type: std_msgs/msg/Bool
+    queue_size: 5
+    qos:
+      reliability: reliable
+      durability: volatile
+      
+
+  - topic: /corvus/qvio/soft_reset
+    type: std_msgs/msg/Bool
+    queue_size: 5
+    qos:
+      reliability: reliable
+      durability: volatile
+      
+
+  - topic: /corvus/navcontrol/flight_started
+    type: std_msgs/msg/String
+    queue_size: 10
+    qos:
+      reliability: reliable
+      durability: volatile
+      
+
+  - topic: /corvus/navcontrol/flight_finished
+    type: std_msgs/msg/String
+    queue_size: 10
+    qos:
+      reliability: reliable
+      durability: volatile
+      
+
+  - topic: /corvus/navcontrol/flight/resume
+    type: std_msgs/msg/Empty
+    queue_size: 5
+    qos:
+      reliability: reliable
+      durability: volatile
+      
+
+  - topic: /corvus/navcontrol/flight/pause
+    type: std_msgs/msg/Empty
+    queue_size: 5
+    qos:
+      reliability: reliable
+      durability: volatile
+      
+
+  - topic: /corvus/navcontrol/command/emergency_land 
+    type: std_msgs/msg/Empty
+    queue_size: 5
+    qos:
+      reliability: reliable
+      durability: volatile
+      
+
+
+  - topic: /corvus/cpu/temperature
+    type: std_msgs/msg/Float32MultiArray
+    queue_size: 10
+    qos:
+      reliability: reliable
+      durability: volatile
+      
+
+  - topic: /voxl/qvio/error_code
+    type: "std_msgs/msg/UInt32"
+    queue_size: 5
+    qos:
+      reliability: reliable
+      durability: volatile
+      
+
+  - topic: /corvus/cam/hires/CameraInfo
+    type: sensor_msgs/msg/CameraInfo
+    queue_size: 5
+    qos:
+      reliability: reliable
+      durability: volatile
+      
+
+  - topic: /corvus/cam/hires2/CameraInfo
+    type: sensor_msgs/msg/CameraInfo
+    queue_size: 5
+    qos:
+      reliability: reliable
+      durability: volatile
+      
+
+  - topic: /corvus/cam/tracking/CameraInfo
+    type: sensor_msgs/msg/CameraInfo
+    queue_size: 5
+    qos:
+      reliability: reliable
+      durability: volatile
+      
+
+  
+  - topic: /corvus/navcontrol/command/external_command
+    type: std_msgs/msg/Empty
+    queue_size: 5
+    qos:
+      reliability: reliable
+      durability: volatile
+    
+  - topic: /corvus/navcontrol/task/next_command
+    type: std_msgs/msg/String
+    queue_size: 10
+    qos:
+      reliability: reliable
+      durability: volatile
+
+  - topic: /corvus/navcontrol/flight_started
+    type: std_msgs/msg/String
+    queue_size: 10
+    qos:
+      reliability: reliable
+      durability: volatile
+
+  - topic: /wds/pose/local
+    type: geometry_msgs/msg/PoseStamped
+    queue_size: 10
