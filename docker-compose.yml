@@ -6,7 +6,7 @@ services:
       dockerfile: Dockerfile
     
     volumes:
-      - /home/root/wds/wds_tools_ws/src/ros-humble-ros1-bridge-builder/config/:/home/topics
+      - /home/root/wds/WDS_generalTools/ros1_bridge_ws/src/ros-humble-ros1-bridge-builder/config/:/home/topics
       - ./fastdds_config.xml:/home/fastdds_config.xml
         
     environment:
