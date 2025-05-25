@@ -22,6 +22,28 @@ Create a "*ros-humble-ros1-bridge*" package that can be used directly within Ubu
 - Note2: The builder image can be created on an amd64 machine (e.g., Intel and AMD CPUs) or an arm64 machine (e.g., Raspberry Pi 4B and Nvidia Jetson Orin).  Docker will automatically select the correct platform variant based on the host's architecture.
 
 
+## WDS Installation 
+
+1. The package is cloned as part of WDS_generalTools
+   ``` git@github.com:WDS-technology/WDS_generalTools.git ```
+2. After the package has been cloned, go to
+   ```
+   cd /home/root/wds/WDS_generalTools/ros1_bridge_ws/src/ros-humble-ros1-bridge-builder/scripts
+   ./install_service.sh
+   ```
+  Now the service to run the bridge existing 
+3.
+go back to package root 
+``` cd .. ```
+4. do a docker compose up  for sanity check 
+
+``` docker compose up ```
+
+5. If docker buiilt well you would be able to use drone manager
+
+----------------------------------------------------------------------
+
+
 Alternative builds:
 ``` bash
   # **[OPTIONAL]** If you don't want to build ros-tutorals support:
