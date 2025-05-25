@@ -27,14 +27,18 @@ Create a "*ros-humble-ros1-bridge*" package that can be used directly within Ubu
 1. The package is cloned as part of WDS_generalTools
    ``` git@github.com:WDS-technology/WDS_generalTools.git ```
 2. After the package has been cloned, go to
+   
    ```
    cd /home/root/wds/WDS_generalTools/ros1_bridge_ws/src/ros-humble-ros1-bridge-builder/scripts
    ./install_service.sh
    ```
+   
   Now the service to run the bridge existing 
-3.
-go back to package root 
+  
+3.go back to package root 
+
 ``` cd .. ```
+
 4. do a docker compose up  for sanity check 
 
 ``` docker compose up ```
