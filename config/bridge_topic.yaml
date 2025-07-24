@@ -155,3 +155,18 @@ topics:
   - topic: /wds/pose/local
     type: geometry_msgs/msg/PoseStamped
     queue_size: 10
+
+
+  - topic: /wds/start_landing
+    type: std_msgs/msg/Bool
+    queue_size: 5
+
+  - topic: /wds/start_landing
+    type: std_msgs/msg/Bool
+    queue_size: 5
+
+  - topic: /wds/set_land
+    type: std_msgs/msg/Bool
+    queue_size: 5
+
+    
