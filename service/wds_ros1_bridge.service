@@ -10,7 +10,7 @@ Type=simple
 WorkingDirectory=/home/root/wds/WDS_generalTools/ros1_bridge_ws/src/ros-humble-ros1-bridge-builder
 
 # Run **without -d** so Compose stays in the foreground
-ExecStart=/usr/bin/docker compose up --pull=always --quiet-pull
+ExecStart=/usr/bin/docker compose up 
 # When the unit is stopped, tear everything down cleanly
 ExecStop=/usr/bin/docker compose down --remove-orphans
 
