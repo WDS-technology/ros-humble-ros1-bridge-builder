@@ -1,4 +1,21 @@
 topics:
+
+  # --- Land command from ROS1 -> ROS2 (your ROS2 subscriber is best-effort) trigger emergency land
+  - topic: /wds/set_land
+    type: std_msgs/msg/Bool
+    queue_size: 5
+    qos:
+      reliability: reliable
+      durability: volatile
+
+  # --- Start landing algorithem from ROS2 -> ROS1 (publisher depth=2, reliable)
+  - topic: /wds/start_landing
+    type: std_msgs/msg/Bool
+    queue_size: 2
+    qos:
+      reliability: reliable
+      durability: volatile
+      
   - topic: /voxl/pose/local
     type: geometry_msgs/msg/PoseStamped
     queue_size: 10
