@@ -1,21 +1,13 @@
 topics:
-
-  # --- Land command from ROS1 -> ROS2 (your ROS2 subscriber is best-effort) trigger emergency land
-  - topic: /wds/set_land
-    type: std_msgs/msg/Bool
-    queue_size: 5
+  - topic: /mavros/local_position/pose
+    type: geometry_msgs/msg/PoseStamped
+    queue_size: 10
     qos:
       reliability: reliable
       durability: volatile
 
-  # --- Start landing algorithem from ROS2 -> ROS1 (publisher depth=2, reliable)
-  - topic: /wds/start_landing
-    type: std_msgs/msg/Bool
-    queue_size: 2
-    qos:
-      reliability: reliable
-      durability: volatile
-      
+
+
   - topic: /voxl/pose/local
     type: geometry_msgs/msg/PoseStamped
     queue_size: 10
@@ -76,7 +68,7 @@ topics:
 
   - topic: /corvus/navcontrol/flight_finished
     type: std_msgs/msg/String
-    queue_size: 10
+    queue_size: 2
     qos:
       reliability: reliable
       durability: volatile
@@ -84,7 +76,7 @@ topics:
 
   - topic: /corvus/navcontrol/flight/resume
     type: std_msgs/msg/Empty
-    queue_size: 5
+    queue_size: 2
     qos:
       reliability: reliable
       durability: volatile
@@ -109,7 +101,7 @@ topics:
 
   - topic: /corvus/cpu/temperature
     type: std_msgs/msg/Float32MultiArray
-    queue_size: 10
+    queue_size: 2
     qos:
       reliability: reliable
       durability: volatile
@@ -157,26 +149,21 @@ topics:
     
   - topic: /corvus/navcontrol/task/next_command
     type: std_msgs/msg/String
-    queue_size: 10
+    queue_size: 2
     qos:
       reliability: reliable
       durability: volatile
 
   - topic: /corvus/navcontrol/flight_started
     type: std_msgs/msg/String
-    queue_size: 10
+    queue_size: 2
     qos:
       reliability: reliable
       durability: volatile
 
-  - topic: /wds/pose/local
-    type: geometry_msgs/msg/PoseStamped
-    queue_size: 10
-
-
-  - topic: /wds/start_landing
-    type: std_msgs/msg/Bool
-    queue_size: 5
+  # - topic: /wds/pose/local
+  #   type: geometry_msgs/msg/PoseStamped
+  #   queue_size: 10
 
   - topic: /wds/start_landing
     type: std_msgs/msg/Bool

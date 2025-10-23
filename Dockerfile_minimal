@@ -1,0 +1,172 @@
+FROM ros:humble-ros-base-jammy
+
+# Build with minimal packages for ARM64 drone bridge
+# Target size: ~1-1.5GB (down from 4.31GB)
+
+SHELL ["/bin/bash", "-o", "pipefail", "-o", "errexit", "-c"]
+
+###########################
+# 1.) Install ONLY essential ROS2 packages (NOT desktop)
+###########################
+RUN apt-get -y update && \
+    apt-get -y upgrade && \
+    apt-get -y install --no-install-recommends \
+        ros-humble-ros-core \
+        ros-humble-geometry-msgs \
+        ros-humble-std-msgs \
+        ros-humble-sensor-msgs \
+        python3-colcon-common-extensions \
+        git \
+        ros-humble-rmw-cyclonedds-cpp && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+###########################
+# 2.) Temporarily remove ROS2 apt repository
+###########################
+RUN if [ -f /etc/apt/sources.list.d/ros2-latest.list ]; then \
+        mv /etc/apt/sources.list.d/ros2-latest.list /root/; \
+    elif [ -f /etc/apt/sources.list.d/ros2.list ]; then \
+        mv /etc/apt/sources.list.d/ros2.list /root/ros2-latest.list; \
+    fi
+RUN apt-get update
+
+###########################
+# 3.) Comment out the catkin conflict
+###########################
+RUN sed -i -e 's|^Conflicts: catkin|#Conflicts: catkin|' /var/lib/dpkg/status
+RUN apt-get install -f
+
+###########################
+# 4.) Force install these packages
+###########################
+RUN apt-get download python3-catkin-pkg
+RUN apt-get download python3-rospkg
+RUN apt-get download python3-rosdistro
+RUN dpkg --force-overwrite -i python3-catkin-pkg*.deb
+RUN dpkg --force-overwrite -i python3-rospkg*.deb
+RUN dpkg --force-overwrite -i python3-rosdistro*.deb
+RUN apt-get install -f
+
+###########################
+# 4b.) Comment out the catkin conflict AGAIN (dpkg overwrote it!)
+###########################
+RUN sed -i -e 's|^Conflicts: catkin|#Conflicts: catkin|' /var/lib/dpkg/status
+
+
+
+
+###########################
+# 5.) Install ROS1 desktop development packages
+###########################
+RUN apt-get -y install --no-install-recommends \
+        ros-desktop-dev && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Fix ARM64 pkgconfig path issue
+RUN if [[ $(uname -m) = "arm64" || $(uname -m) = "aarch64" ]]; then \
+      mkdir -p /usr/lib/aarch64-linux-gnu/pkgconfig/ && \
+      if [ -d /usr/lib/x86_64-linux-gnu/pkgconfig ]; then \
+        cp /usr/lib/x86_64-linux-gnu/pkgconfig/* /usr/lib/aarch64-linux-gnu/pkgconfig/ 2>/dev/null || true; \
+      fi; \
+    fi
+
+###########################
+# 6.) Restore the ROS2 apt repos
+###########################
+RUN if [ -f /root/ros2-latest.list ]; then \
+        mv /root/ros2-latest.list /etc/apt/sources.list.d/; \
+    fi
+RUN apt-get -y update
+
+# Disable all optional builds
+ARG ADD_ros_tutorials=0
+ARG ADD_grid_map=0
+ARG ADD_example_custom_msgs=0
+
+
+###########################
+# 6b.) Set up ROS1 environment variables for the bridge build
+###########################
+ENV ROS_PACKAGE_PATH=/opt/ros/noetic/share
+RUN mkdir -p /opt/ros/noetic/share && \
+    for pkg in geometry_msgs std_msgs sensor_msgs nav_msgs actionlib_msgs rosgraph_msgs diagnostic_msgs shape_msgs stereo_msgs trajectory_msgs visualization_msgs; do \
+      if [ -d /usr/share/${pkg} ]; then \
+        ln -sf /usr/share/${pkg} /opt/ros/noetic/share/${pkg}; \
+      fi; \
+    done && \
+    ls -la /opt/ros/noetic/share/ && \
+    echo "ROS_PACKAGE_PATH is set to: $ROS_PACKAGE_PATH"
+
+###########################
+# 7.) Build ros1_bridge with MINIMAL configuration
+###########################
+RUN source /opt/ros/humble/setup.bash && \
+    mkdir -p /ros-humble-ros1-bridge/src && \
+    cd /ros-humble-ros1-bridge/src && \
+    git clone https://github.com/smith-doug/ros1_bridge.git && \
+    cd ros1_bridge/ && \
+    git checkout action_bridge_humble && \
+    cd ../.. && \
+    MEMG=$(printf "%.0f" $(free -g | awk '/^Mem:/{print $2}')) && \
+    NPROC=$(nproc) && \
+    MIN=$((MEMG<NPROC ? MEMG : NPROC)) && \
+    MIN=$((MIN>2 ? 2 : MIN)) && \
+    echo "Building ros1_bridge with $MIN concurrent jobs" && \
+    time MAKEFLAGS="-j $MIN" colcon build \
+      --event-handlers console_direct+ \
+      --cmake-args \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DBUILD_TESTING=OFF && \
+    rm -rf /ros-humble-ros1-bridge/build && \
+    rm -rf /ros-humble-ros1-bridge/src
+
+###########################
+# 8.) Set CycloneDDS as default RMW
+###########################
+ENV RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+
+###########################
+# 9.) Pack minimal ROS1 libraries
+###########################
+RUN ROS1_LIBS="libxmlrpcpp.so librostime.so libroscpp.so libroscpp_serialization.so" && \
+    ROS1_LIBS="$ROS1_LIBS librosconsole.so librosconsole_log4cxx.so librosconsole_backend_interface.so" && \
+    ROS1_LIBS="$ROS1_LIBS liblog4cxx.so libcpp_common.so libb64.so libaprutil-1.so libapr-1.so" && \
+    ROS1_LIBS="$ROS1_LIBS libactionlib.so.1d" && \
+    if [ -d /ros-humble-ros1-bridge/install/ros1_bridge/lib ]; then \
+      cd /ros-humble-ros1-bridge/install/ros1_bridge/lib && \
+      if [ -f libros1_bridge.so ]; then \
+        for soFile in $ROS1_LIBS; do \
+          soFilePath=$(ldd libros1_bridge.so | grep $soFile | awk '{print $3;}') || true; \
+          if [ -n "$soFilePath" ] && [ -f "$soFilePath" ]; then \
+            cp "$soFilePath" ./ || echo "Warning: Could not copy $soFile"; \
+          fi; \
+        done; \
+      else \
+        echo "ERROR: libros1_bridge.so not found"; \
+        ls -la; \
+        exit 1; \
+      fi; \
+    else \
+      echo "ERROR: install directory not found"; \
+      ls -la /ros-humble-ros1-bridge/; \
+      exit 1; \
+    fi
+
+###########################
+# 10.) Final cleanup and tarball creation
+###########################
+RUN apt-get -y clean all && \
+    apt-get -y autoremove && \
+    rm -rf /var/lib/apt/lists/* && \
+    rm -rf /tmp/* && \
+    rm -rf /root/.cache
+
+RUN tar czf /ros-humble-ros1-bridge.tgz \
+    --exclude '*/build/*' \
+    --exclude '*/src/*' \
+    /ros-humble-ros1-bridge
+
+ENTRYPOINT []
+CMD cat /ros-humble-ros1-bridge.tgz; sync
