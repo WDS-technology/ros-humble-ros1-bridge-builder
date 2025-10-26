@@ -1,23 +1,21 @@
 FROM ros:humble-ros-base-jammy
 
-# Build with minimal packages for ARM64 drone bridge
-# Target size: ~1-1.5GB (down from 4.31GB)
+# Build with ros-humble-desktop (not desktop-full) for ARM64 drone bridge
+# Uses ros-humble-desktop + ros-desktop-dev (ROS1)
+# Target size: ~2-2.5GB (down from 4.31GB desktop-full)
+# Includes visualization tools (rviz2) and all common message packages
 
 SHELL ["/bin/bash", "-o", "pipefail", "-o", "errexit", "-c"]
 
 ###########################
-# 1.) Install ONLY essential ROS2 packages (NOT desktop)
+# 1.) Install ROS2 Desktop (includes all common message packages + visualization)
 ###########################
-RUN apt-get -y update && \
-    apt-get -y upgrade && \
-    apt-get -y install --no-install-recommends \
-        ros-humble-ros-core \
-        ros-humble-geometry-msgs \
-        ros-humble-std-msgs \
-        ros-humble-sensor-msgs \
-        python3-colcon-common-extensions \
-        git \
-        ros-humble-rmw-cyclonedds-cpp && \
+RUN apt-get -y update
+RUN apt-get -y upgrade
+RUN apt-get -y install ros-humble-desktop
+
+RUN apt-get -y install --no-install-recommends \
+    ros-humble-rmw-cyclonedds-cpp && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -85,22 +83,8 @@ ARG ADD_ros_tutorials=0
 ARG ADD_grid_map=0
 ARG ADD_example_custom_msgs=0
 
-
 ###########################
-# 6b.) Set up ROS1 environment variables for the bridge build
-###########################
-ENV ROS_PACKAGE_PATH=/opt/ros/noetic/share
-RUN mkdir -p /opt/ros/noetic/share && \
-    for pkg in geometry_msgs std_msgs sensor_msgs nav_msgs actionlib_msgs rosgraph_msgs diagnostic_msgs shape_msgs stereo_msgs trajectory_msgs visualization_msgs; do \
-      if [ -d /usr/share/${pkg} ]; then \
-        ln -sf /usr/share/${pkg} /opt/ros/noetic/share/${pkg}; \
-      fi; \
-    done && \
-    ls -la /opt/ros/noetic/share/ && \
-    echo "ROS_PACKAGE_PATH is set to: $ROS_PACKAGE_PATH"
-
-###########################
-# 7.) Build ros1_bridge with MINIMAL configuration
+# 7.) Build ros1_bridge
 ###########################
 RUN source /opt/ros/humble/setup.bash && \
     mkdir -p /ros-humble-ros1-bridge/src && \
@@ -112,13 +96,17 @@ RUN source /opt/ros/humble/setup.bash && \
     MEMG=$(printf "%.0f" $(free -g | awk '/^Mem:/{print $2}')) && \
     NPROC=$(nproc) && \
     MIN=$((MEMG<NPROC ? MEMG : NPROC)) && \
-    MIN=$((MIN>2 ? 2 : MIN)) && \
     echo "Building ros1_bridge with $MIN concurrent jobs" && \
     time MAKEFLAGS="-j $MIN" colcon build \
       --event-handlers console_direct+ \
       --cmake-args \
         -DCMAKE_BUILD_TYPE=Release \
         -DBUILD_TESTING=OFF && \
+    # Verify the bridge has message mappings
+    echo "Checking bridge mappings..." && \
+    source install/setup.bash && \
+    ros2 run ros1_bridge dynamic_bridge --print-pairs | head -20 && \
+    # Clean up build artifacts
     rm -rf /ros-humble-ros1-bridge/build && \
     rm -rf /ros-humble-ros1-bridge/src
 
