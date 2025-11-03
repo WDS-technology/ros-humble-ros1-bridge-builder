@@ -5,13 +5,11 @@ services:
     image: wdsdrones/wds_ros1_to_ros2_humble_bridge:latest
     volumes:
       - /home/root/wds/WDS_generalTools/ros1_bridge_ws/src/ros-humble-ros1-bridge-builder/config/:/home/topics
-      - ./fastdds_config.xml:/home/fastdds_config.xml
         
     environment:
       - RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
-
       - RCUTILS_COLORIZED_OUTPUT=1
-      - ROS_DOMAIN_ID=22
+      - ROS_DOMAIN_ID=25
       - ROS_IP=127.0.0.1
       - ROS_MASTER_URI=http://127.0.0.1:11311
       - FASTRTPS_DEFAULT_PROFILES_FILE=/home/fastdds_config.xml
