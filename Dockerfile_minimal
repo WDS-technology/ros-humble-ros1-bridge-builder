@@ -23,10 +23,10 @@ RUN apt-get -y install --no-install-recommends \
 # 2.) Temporarily remove ROS2 apt repository
 ###########################
 RUN if [ -f /etc/apt/sources.list.d/ros2-latest.list ]; then \
-        mv /etc/apt/sources.list.d/ros2-latest.list /root/; \
-    elif [ -f /etc/apt/sources.list.d/ros2.list ]; then \
-        mv /etc/apt/sources.list.d/ros2.list /root/ros2-latest.list; \
-    fi
+  mv /etc/apt/sources.list.d/ros2-latest.list /root/; \
+  elif [ -f /etc/apt/sources.list.d/ros2.list ]; then \
+  mv /etc/apt/sources.list.d/ros2.list /root/ros2-latest.list; \
+  fi
 RUN apt-get update
 
 ###########################
@@ -58,33 +58,73 @@ RUN sed -i -e 's|^Conflicts: catkin|#Conflicts: catkin|' /var/lib/dpkg/status
 # 5.) Install ROS1 desktop development packages
 ###########################
 RUN apt-get -y install --no-install-recommends \
-        ros-desktop-dev && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+  ros-desktop-dev && \
+  apt-get clean && \
+  rm -rf /var/lib/apt/lists/*
 
 # Fix ARM64 pkgconfig path issue
 RUN if [[ $(uname -m) = "arm64" || $(uname -m) = "aarch64" ]]; then \
-      mkdir -p /usr/lib/aarch64-linux-gnu/pkgconfig/ && \
-      if [ -d /usr/lib/x86_64-linux-gnu/pkgconfig ]; then \
-        cp /usr/lib/x86_64-linux-gnu/pkgconfig/* /usr/lib/aarch64-linux-gnu/pkgconfig/ 2>/dev/null || true; \
-      fi; \
-    fi
+  mkdir -p /usr/lib/aarch64-linux-gnu/pkgconfig/ && \
+  if [ -d /usr/lib/x86_64-linux-gnu/pkgconfig ]; then \
+  cp /usr/lib/x86_64-linux-gnu/pkgconfig/* /usr/lib/aarch64-linux-gnu/pkgconfig/ 2>/dev/null || true; \
+  fi; \
+  fi
 
 ###########################
 # 6.) Restore the ROS2 apt repos
 ###########################
 RUN if [ -f /root/ros2-latest.list ]; then \
-        mv /root/ros2-latest.list /etc/apt/sources.list.d/; \
-    fi
+  mv /root/ros2-latest.list /etc/apt/sources.list.d/; \
+  fi
 RUN apt-get -y update
 
 # Disable all optional builds
-ARG ADD_ros_tutorials=0
+ARG ADD_ros_tutorials=1
 ARG ADD_grid_map=0
 ARG ADD_example_custom_msgs=0
+###########################
+# 6.0b) Install Qt5 for ros_tutorials (turtlesim needs it)
+###########################
+RUN apt-get -y update && \
+  apt-get -y install --no-install-recommends \
+  qtbase5-dev \
+  libqt5svg5-dev && \
+  apt-get clean && \
+  rm -rf /var/lib/apt/lists/*
 
 ###########################
-# 7.) Build ros1_bridge
+# 6.1) Add additional ros_tutorials messages and services
+# eg., See AddTwoInts server and client tutorial
+###########################
+RUN if [[ "$ADD_ros_tutorials" = "1" ]]; then                           \
+  git clone https://github.com/ros/ros_tutorials.git;               \
+  cd ros_tutorials;                                                 \
+  git checkout noetic-devel;                                        \
+  unset ROS_DISTRO;                                                 \
+  time colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release;        \
+  fi
+
+######################################
+# 6.3) Compile custom message (code provided by Codaero)
+#   Note1: Make sure the package name ends with "_msgs".
+#   Note2: Use the same package name for both ROS1 and ROS2.
+#   See https://github.com/ros2/ros1_bridge/blob/master/doc/index.rst
+######################################
+RUN if [[ "$ADD_example_custom_msgs" = "1" ]]; then                     \
+  git clone https://github.com/TommyChangUMD/custom_msgs.git;       \
+  # Compile ROS1:                                                   \
+  cd /custom_msgs/custom_msgs_ros1;                                 \
+  unset ROS_DISTRO;                                                 \
+  time colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release;        \
+  # Compile ROS2:                                                   \
+  cd /custom_msgs/custom_msgs_ros2;                                 \
+  source /opt/ros/humble/setup.bash;                                \
+  time colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release;        \
+  fi
+
+
+###########################
+# 7.) Compile ros1_bridge
 ###########################
 RUN source /opt/ros/humble/setup.bash && \
     mkdir -p /ros-humble-ros1-bridge/src && \
@@ -119,42 +159,65 @@ ENV RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
 # 9.) Pack minimal ROS1 libraries
 ###########################
 RUN ROS1_LIBS="libxmlrpcpp.so librostime.so libroscpp.so libroscpp_serialization.so" && \
-    ROS1_LIBS="$ROS1_LIBS librosconsole.so librosconsole_log4cxx.so librosconsole_backend_interface.so" && \
-    ROS1_LIBS="$ROS1_LIBS liblog4cxx.so libcpp_common.so libb64.so libaprutil-1.so libapr-1.so" && \
-    ROS1_LIBS="$ROS1_LIBS libactionlib.so.1d" && \
-    if [ -d /ros-humble-ros1-bridge/install/ros1_bridge/lib ]; then \
-      cd /ros-humble-ros1-bridge/install/ros1_bridge/lib && \
-      if [ -f libros1_bridge.so ]; then \
-        for soFile in $ROS1_LIBS; do \
-          soFilePath=$(ldd libros1_bridge.so | grep $soFile | awk '{print $3;}') || true; \
-          if [ -n "$soFilePath" ] && [ -f "$soFilePath" ]; then \
-            cp "$soFilePath" ./ || echo "Warning: Could not copy $soFile"; \
-          fi; \
-        done; \
-      else \
-        echo "ERROR: libros1_bridge.so not found"; \
-        ls -la; \
-        exit 1; \
-      fi; \
-    else \
-      echo "ERROR: install directory not found"; \
-      ls -la /ros-humble-ros1-bridge/; \
-      exit 1; \
-    fi
+  ROS1_LIBS="$ROS1_LIBS librosconsole.so librosconsole_log4cxx.so librosconsole_backend_interface.so" && \
+  ROS1_LIBS="$ROS1_LIBS liblog4cxx.so libcpp_common.so libb64.so libaprutil-1.so libapr-1.so" && \
+  ROS1_LIBS="$ROS1_LIBS libactionlib.so.1d" && \
+  if [ -d /ros-humble-ros1-bridge/install/ros1_bridge/lib ]; then \
+  cd /ros-humble-ros1-bridge/install/ros1_bridge/lib && \
+  if [ -f libros1_bridge.so ]; then \
+  for soFile in $ROS1_LIBS; do \
+  soFilePath=$(ldd libros1_bridge.so | grep $soFile | awk '{print $3;}') || true; \
+  if [ -n "$soFilePath" ] && [ -f "$soFilePath" ]; then \
+  cp "$soFilePath" ./ || echo "Warning: Could not copy $soFile"; \
+  fi; \
+  done; \
+  else \
+  echo "ERROR: libros1_bridge.so not found"; \
+  ls -la; \
+  exit 1; \
+  fi; \
+  else \
+  echo "ERROR: install directory not found"; \
+  ls -la /ros-humble-ros1-bridge/; \
+  exit 1; \
+  fi
 
 ###########################
-# 10.) Final cleanup and tarball creation
+# 10.) Aggressive cleanup to minimize image size
 ###########################
+# Remove build artifacts and sources
+RUN rm -rf /ros_tutorials/build /ros_tutorials/log /ros_tutorials/src && \
+  rm -rf /custom_msgs && \
+  rm -rf /ros-humble-ros1-bridge/build && \
+  rm -rf /ros-humble-ros1-bridge/src && \
+  rm -rf /ros-humble-ros1-bridge/log
+
+# Clean apt cache and temp files
 RUN apt-get -y clean all && \
-    apt-get -y autoremove && \
-    rm -rf /var/lib/apt/lists/* && \
-    rm -rf /tmp/* && \
-    rm -rf /root/.cache
+  apt-get -y autoremove --purge && \
+  rm -rf /var/lib/apt/lists/* && \
+  rm -rf /tmp/* && \
+  rm -rf /root/.cache && \
+  rm -rf /var/cache/apt/* && \
+  rm -rf /var/tmp/*
 
+# Remove unnecessary ROS2 packages to save space (keep only what's needed for bridge runtime)
+RUN apt-get update && \
+  apt-get -y remove --purge \
+    ros-humble-demo-* \
+    ros-humble-examples-* \
+    ros-humble-dummy-* \
+    ros-humble-turtlesim && \
+  apt-get -y autoremove --purge && \
+  apt-get clean && \
+  rm -rf /var/lib/apt/lists/*
+
+# Create tarball
 RUN tar czf /ros-humble-ros1-bridge.tgz \
-    --exclude '*/build/*' \
-    --exclude '*/src/*' \
-    /ros-humble-ros1-bridge
+  --exclude '*/build/*' \
+  --exclude '*/src/*' \
+  --exclude '*/log/*' \
+  /ros-humble-ros1-bridge
 
 ENTRYPOINT []
 CMD cat /ros-humble-ros1-bridge.tgz; sync
