@@ -1,0 +1,23 @@
+cmake_minimum_required(VERSION 3.0.2)
+project(wds_battery_msgs)
+
+find_package(catkin REQUIRED COMPONENTS
+  message_generation
+  message_runtime
+  std_msgs
+)
+
+add_message_files(
+  DIRECTORY msg
+  FILES
+    WdsBattery.msg
+)
+
+generate_messages(
+  DEPENDENCIES
+    std_msgs
+)
+
+catkin_package(
+  CATKIN_DEPENDS message_runtime std_msgs
+)

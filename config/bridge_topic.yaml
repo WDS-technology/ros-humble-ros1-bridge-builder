@@ -33,6 +33,9 @@ topics:
   - topic: /corvus/powermodule/battery
     type: sensor_msgs/msg/BatteryState
     queue_size: 10
+    qos:
+      reliability: reliable
+      durability: volatile
 
   - topic: /corvus/payload/set_recording
     type: std_msgs/msg/Bool
@@ -178,4 +181,10 @@ topics:
     type: std_msgs/msg/Bool
     queue_size: 5
 
-    
+  - topic: /wds/battery
+    type: wds_battery_msgs/msg/WdsBattery
+    queue_size: 10
+    qos:
+      reliability: reliable
+      durability: volatile
+

@@ -1,0 +1,24 @@
+cmake_minimum_required(VERSION 3.0.2)
+project(battery_relay_ros1)
+
+find_package(catkin REQUIRED COMPONENTS
+  roscpp
+  sensor_msgs
+  wds_battery_msgs
+)
+
+catkin_package(
+  CATKIN_DEPENDS roscpp sensor_msgs wds_battery_msgs
+)
+
+include_directories(
+  ${catkin_INCLUDE_DIRS}
+)
+
+add_executable(battery_relay_node src/battery_relay_node.cpp)
+add_dependencies(battery_relay_node ${catkin_EXPORTED_TARGETS})
+target_link_libraries(battery_relay_node ${catkin_LIBRARIES})
+
+install(TARGETS battery_relay_node
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)

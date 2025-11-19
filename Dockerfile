@@ -90,7 +90,7 @@ RUN mv /root/ros2-latest.list /etc/apt/sources.list.d/
 RUN apt-get -y update
 
 # for ros-humble-example-interfaces:
-ARG ADD_ros_tutorials=1
+ARG ADD_ros_tutorials=0
 
 # for ros-humble-grid-map:
 ARG ADD_grid_map=0
@@ -98,10 +98,14 @@ ARG ADD_grid_map=0
 # for a custom message example
 ARG ADD_example_custom_msgs=0
 
+# for WDS battery messages
+ARG ADD_wds_battery_msgs=0
+
 # sanity check:
 RUN echo "ADD_ros_tutorials         = '$ADD_ros_tutorials'"
 RUN echo "ADD_grid_map              = '$ADD_grid_map'"
 RUN echo "ADD_example_custom_msgs   = '$ADD_example_custom_msgs'"
+RUN echo "ADD_wds_battery_msgs      = '$ADD_wds_battery_msgs'"
 
 ###########################
 # 6.1) Add additional ros_tutorials messages and services
@@ -180,6 +184,23 @@ RUN if [[ "$ADD_example_custom_msgs" = "1" ]]; then                     \
       time colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release;        \
     fi
 
+######################################
+# 6.4) Compile WDS battery messages
+#   Note1: Package name ends with "_msgs" as required.
+#   Note2: Same package name (wds_battery_msgs) for both ROS1 and ROS2.
+######################################
+COPY wds_battery_msgs /wds_battery_msgs
+RUN if [[ "$ADD_wds_battery_msgs" = "1" ]]; then                        \
+      # Compile ROS1:                                                   \
+      cd /wds_battery_msgs/wds_battery_msgs_ros1;                       \
+      unset ROS_DISTRO;                                                 \
+      time colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release;        \
+      # Compile ROS2:                                                   \
+      cd /wds_battery_msgs/wds_battery_msgs_ros2;                       \
+      source /opt/ros/humble/setup.bash;                                \
+      time colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release;        \
+    fi
+
 ###########################
 # 7.) Compile ros1_bridge
 ###########################
@@ -213,6 +234,13 @@ RUN                                                                             
       source /custom_msgs/custom_msgs_ros1/install/setup.bash;                  \
       # Apply ROS2 package overlay                                              \
       source /custom_msgs/custom_msgs_ros2/install/setup.bash;                  \
+    fi;                                                                         \
+    #                                                                           \
+    if [[ "$ADD_wds_battery_msgs" = "1" ]]; then                                \
+      # Apply ROS1 package overlay                                              \
+      source /wds_battery_msgs/wds_battery_msgs_ros1/install/setup.bash;        \
+      # Apply ROS2 package overlay                                              \
+      source /wds_battery_msgs/wds_battery_msgs_ros2/install/setup.bash;        \
     fi;                                                                         \
     #                                                                           \
     #-------------------------------------                                      \
