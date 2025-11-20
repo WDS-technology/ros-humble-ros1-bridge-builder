@@ -10,7 +10,7 @@ Create a "*ros-humble-ros1-bridge*" package that can be used directly within Ubu
 ## How to create this builder docker images:
 
 ``` bash
-  git clone https://github.com/TommyChangUMD/ros-humble-ros1-bridge-builder.git
+  git@github.com:WDS-technology/ros-humble-ros1-bridge-builder.git
   cd ros-humble-ros1-bridge-builder
 
   # By default, ros-tutorals support will be built: (bridging the ros-humble-example-interfaces package)
