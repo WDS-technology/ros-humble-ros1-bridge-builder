@@ -7,15 +7,6 @@ Create a "*ros-humble-ros1-bridge*" package that can be used directly within Ubu
 
 - Note3: If you are looking for ROS2 Jazzy + Ubuntu 24.04 support, see https://github.com/TommyChangUMD/ros-jazzy-ros1-bridge-builder
 
-## How to create this builder docker images:
-
-``` bash
-  git@github.com:WDS-technology/ros-humble-ros1-bridge-builder.git
-  cd ros-humble-ros1-bridge-builder
-
-  # By default, ros-tutorals support will be built: (bridging the ros-humble-example-interfaces package)
-  docker build . -t ros-humble-ros1-bridge-builder
-```
 
 - Note1: Since building a docker image just needs docker, you could do this step on any system that has docker installed -- it doesn't have to on a Ubuntu 22.04 (Jammy) and it doesn't need ROS2 neither.
 
@@ -23,27 +14,28 @@ Create a "*ros-humble-ros1-bridge*" package that can be used directly within Ubu
 
 
 ## WDS Installation 
-
-1. The package is cloned as part of WDS_generalTools
-   ``` git@github.com:WDS-technology/WDS_generalTools.git ```
+rm 
+1. The package is cloned in /home/root/wds of the drone 
+   ``` git clone git@github.com:WDS-technology/ros-humble-ros1-bridge-builder.git ```
 2. After the package has been cloned, go to
    
    ```
-   cd /home/root/wds/WDS_generalTools/ros1_bridge_ws/src/ros-humble-ros1-bridge-builder/scripts
+   cd /home/root/wds/ros1_bridge_ws/src/ros-humble-ros1-bridge-builder/scripts
    ./install_service.sh
    ```
    
-  Now the service to run the bridge existing 
-  
 3.go back to package root 
 
 ``` cd .. ```
+4. Pull the docker image
 
-4. do a docker compose up  for sanity check 
+``` docker pull wdsdrones/wds_ros1_to_ros2_humble_bridge:latest ```
 
-``` docker compose up ```
+5. after the image has been downloaded run the service 
+``` systemctl start wds_ros1_bridge.service ```
 
-5. If docker buiilt well you would be able to use drone manager
+6.  Check the service is running well
+``` systemctl status wds_ros1_bridge.service ```
 
 ----------------------------------------------------------------------
 
