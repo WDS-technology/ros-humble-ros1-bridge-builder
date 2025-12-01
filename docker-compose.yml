@@ -2,9 +2,9 @@ version: '3'
 
 services:
   ros1_bridge:
-    image: wdsdrones/wds_ros1_to_ros2_humble_bridge:latest
+    image: wdsdrones/wds_ros1_to_ros2_humble_bridge:latest_battery
     volumes:
-      - /home/root/wds/ros-humble-ros1-bridge-builder/config/:/home/topics
+      - /etc/wds/ros_bridge/:/home/topics
         
     environment:
       - RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
