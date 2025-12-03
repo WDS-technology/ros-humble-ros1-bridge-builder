@@ -1,0 +1,8 @@
+prefix=/home/root/wds/ros-humble-ros1-bridge-builder/wds_battery_msgs/catkin_ws/install
+
+Name: wds_battery_msgs
+Description: Description of wds_battery_msgs
+Version: 1.0.0
+Cflags: -I${prefix}/include
+Libs: -L${prefix}/lib 
+Requires: message_runtime std_msgs

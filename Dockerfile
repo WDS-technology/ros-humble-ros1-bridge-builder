@@ -49,7 +49,9 @@ RUN apt-get -y install ros-humble-desktop
 ###########################
 # 2.) Temporarily remove ROS2 apt repository
 ###########################
-RUN mv /etc/apt/sources.list.d/ros2-latest.list /root/
+RUN mv /etc/apt/sources.list.d/ros2.sources /root/ || \
+    mv /etc/apt/sources.list.d/ros2-latest.list /root/ || \
+    mv /etc/apt/sources.list.d/ros2.list /root/ros2.sources || true
 RUN apt-get update
 
 ###########################
@@ -70,7 +72,7 @@ RUN dpkg --force-overwrite -i python3-rosdistro*.deb
 RUN apt-get install -f
 
 ###########################
-# 5.) Install the latest ROS1 desktop configuration
+# 7.) Install the latest ROS1 desktop configuration
 # see https://packages.ubuntu.com/jammy/ros-desktop-dev
 # note: ros-desktop-dev automatically includes tf tf2
 ###########################
@@ -86,7 +88,8 @@ RUN if [[ $(uname -m) = "arm64" || $(uname -m) = "aarch64" ]]; then             
 #   For example, to include ROS tutorial message types, pass
 #   "--build-arg ADD_ros_tutorials=1" to the docker build command.
 ###########################
-RUN mv /root/ros2-latest.list /etc/apt/sources.list.d/
+RUN mv /root/ros2.sources /etc/apt/sources.list.d/ || \
+    mv /root/ros2-latest.list /etc/apt/sources.list.d/ || true
 RUN apt-get -y update
 
 # for ros-humble-example-interfaces:
@@ -108,7 +111,7 @@ RUN echo "ADD_example_custom_msgs   = '$ADD_example_custom_msgs'"
 RUN echo "ADD_wds_battery_msgs      = '$ADD_wds_battery_msgs'"
 
 ###########################
-# 6.1) Add additional ros_tutorials messages and services
+# 8.1) Add additional ros_tutorials messages and services
 # eg., See AddTwoInts server and client tutorial
 ###########################
 RUN if [[ "$ADD_ros_tutorials" = "1" ]]; then                           \
@@ -128,7 +131,7 @@ RUN if [[ "$ADD_ros_tutorials" = "1" ]]; then           \
     fi
 
 ###########################
-# 6.2 Add additional grid-map messages 
+# 8.2 Add additional grid-map messages 
 ###########################
 # navigation stuff (just need costmap_2d?)
 RUN if [[ "$ADD_grid_map" = "1" ]]; then                        \
@@ -167,7 +170,7 @@ RUN if [[ "$ADD_grid_map" = "1" ]]; then                                        
     fi
 
 ######################################
-# 6.3) Compile custom message (code provided by Codaero)
+# 8.3) Compile custom message (code provided by Codaero)
 #   Note1: Make sure the package name ends with "_msgs".
 #   Note2: Use the same package name for both ROS1 and ROS2.
 #   See https://github.com/ros2/ros1_bridge/blob/master/doc/index.rst
@@ -185,11 +188,14 @@ RUN if [[ "$ADD_example_custom_msgs" = "1" ]]; then                     \
     fi
 
 ######################################
-# 6.4) Compile WDS battery messages
+# 8.4) Compile WDS battery messages
 #   Note1: Package name ends with "_msgs" as required.
 #   Note2: Same package name (wds_battery_msgs) for both ROS1 and ROS2.
 ######################################
 COPY wds_battery_msgs /wds_battery_msgs
+# Force rebuild from here (cache bust)
+ARG CACHEBUST=1
+RUN echo "Cache bust: $CACHEBUST"
 RUN if [[ "$ADD_wds_battery_msgs" = "1" ]]; then                        \
       # Compile ROS1:                                                   \
       cd /wds_battery_msgs/wds_battery_msgs_ros1;                       \
@@ -202,7 +208,7 @@ RUN if [[ "$ADD_wds_battery_msgs" = "1" ]]; then                        \
     fi
 
 ###########################
-# 7.) Compile ros1_bridge
+# 9.) Compile ros1_bridge
 ###########################
 RUN                                                                             \
     #-------------------------------------                                      \
@@ -256,12 +262,12 @@ RUN                                                                             
     NPROC=$(nproc);  MIN=$((MEMG<NPROC ? MEMG : NPROC));                        \
     echo "Please wait...  running $MIN concurrent jobs to build ros1_bridge";   \
     time MAKEFLAGS="-j $MIN" colcon build --event-handlers console_direct+      \
-      --cmake-args -DCMAKE_BUILD_TYPE=Release 
+      --cmake-args -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF 
 
 
 
 ###########################
-# 8 -b Cyclone
+# 10.) Install CycloneDDS
 ###########################
 RUN apt-get update && \
     apt-get install -y ros-humble-rmw-cyclonedds-cpp && \
@@ -271,19 +277,20 @@ RUN apt-get update && \
 ENV RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
 
 ###########################
-# 8.) Clean up
+# 11.) Clean up
 ###########################
 RUN apt-get -y clean all; apt-get -y update
 
 ###########################
-# 9.) Pack all ROS1 dependent libraries
+# 12.) Pack all ROS1 dependent libraries
 ###########################
 # fix ARM64 pkgconfig path issue -- Fix provided by ambrosekwok 
 RUN if [[ $(uname -m) = "arm64" || $(uname -m) = "aarch64" ]]; then                    \
       cp /usr/lib/x86_64-linux-gnu/pkgconfig/* /usr/lib/aarch64-linux-gnu/pkgconfig/;  \
     fi
 
-RUN ROS1_LIBS="libxmlrpcpp.so";                                                 \
+RUN set +e;                                                                     \
+     ROS1_LIBS="libxmlrpcpp.so";                                                \
      ROS1_LIBS="$ROS1_LIBS librostime.so";                                      \
      ROS1_LIBS="$ROS1_LIBS libroscpp.so";                                       \
      ROS1_LIBS="$ROS1_LIBS libroscpp_serialization.so";                         \
@@ -296,14 +303,39 @@ RUN ROS1_LIBS="libxmlrpcpp.so";                                                 
      ROS1_LIBS="$ROS1_LIBS libaprutil-1.so";                                    \
      ROS1_LIBS="$ROS1_LIBS libapr-1.so";                                        \
      ROS1_LIBS="$ROS1_LIBS libactionlib.so.1d";                                 \
+     echo "Creating lib directory...";                                          \
+     mkdir -p /ros-humble-ros1-bridge/install/ros1_bridge/lib;                  \
      cd /ros-humble-ros1-bridge/install/ros1_bridge/lib;                        \
-     for soFile in $ROS1_LIBS; do                                               \
-       soFilePath=$(ldd libros1_bridge.so | grep $soFile | awk '{print $3;}');  \
-       cp $soFilePath ./;                                                       \
-     done
+     echo "Current directory: $(pwd)";                                          \
+     echo "Listing files in current dir:";                                      \
+     ls -la;                                                                    \
+     if [ -f "libros1_bridge.so" ]; then                                        \
+       echo "Found libros1_bridge.so, copying dependencies...";                 \
+       for soFile in $ROS1_LIBS; do                                             \
+         soFilePath=$(ldd libros1_bridge.so | grep $soFile | awk '{print $3;}'); \
+         if [ -n "$soFilePath" ]; then                                          \
+           echo "Copying $soFile from $soFilePath";                             \
+           cp $soFilePath ./;                                                   \
+         fi;                                                                    \
+       done;                                                                    \
+     else                                                                       \
+       echo "libros1_bridge.so not found, copying ROS1 libs from system";      \
+       for soFile in $ROS1_LIBS; do                                             \
+         echo "Looking for $soFile...";                                         \
+         libPath=$(find /usr/lib -name "$soFile" 2>/dev/null | head -1);       \
+         if [ -n "$libPath" ]; then                                             \
+           echo "Found $soFile at $libPath, copying...";                        \
+           cp "$libPath" ./ || echo "Failed to copy $soFile";                   \
+         else                                                                   \
+           echo "Warning: $soFile not found";                                   \
+         fi;                                                                    \
+       done;                                                                    \
+     fi;                                                                        \
+     echo "ROS1 lib packaging completed";                                       \
+     set -e
 
 ###########################
-# 10.) Spit out ros1_bridge tarball by default when no command is given
+# 13.) Spit out ros1_bridge tarball by default when no command is given
 ###########################
 RUN tar czf /ros-humble-ros1-bridge.tgz \
      --exclude '*/build/*' --exclude '*/src/*' /ros-humble-ros1-bridge 

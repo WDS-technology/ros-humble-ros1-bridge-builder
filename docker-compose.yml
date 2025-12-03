@@ -18,10 +18,12 @@ services:
 
     command: >
       bash -c "
-      source /opt/ros/humble/setup.bash && 
+      source /opt/ros/humble/setup.bash &&
+      source /wds_battery_msgs/wds_battery_msgs_ros1/install/setup.bash &&
+      source /wds_battery_msgs/wds_battery_msgs_ros2/install/setup.bash &&
       source /ros-humble-ros1-bridge/install/setup.bash &&
-    
-      rosparam load /home/topics/bridge_topic.yaml &&
+
+      rosparam load /home/topics/config/bridge_topic.yaml &&
       ros2 run ros1_bridge parameter_bridge"
 
     restart: unless-stopped

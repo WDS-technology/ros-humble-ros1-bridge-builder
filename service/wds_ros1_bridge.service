@@ -7,7 +7,7 @@ Requires=docker.service corvus_roscore.service
 [Service]
 # ‘simple’ is the default; keeping it explicit for clarity
 Type=simple
-WorkingDirectory=/home/root/wds/ros-humble-ros1-bridge-builder
+WorkingDirectory=/etc/wds/ros_bridge
 
 # Run **without -d** so Compose stays in the foreground
 ExecStart=/usr/bin/docker compose up 

@@ -1,0 +1,2 @@
+battery_relay_ros1:wds_battery_msgs_ros1
+-DCMAKE_BUILD_TYPE=Release -DCATKIN_DEVEL_PREFIX=/home/root/wds/ros-humble-ros1-bridge-builder/wds_battery_msgs/catkin_ws/devel -DCMAKE_INSTALL_PREFIX=/home/root/wds/ros-humble-ros1-bridge-builder/wds_battery_msgs/catkin_ws/install -G Unix Makefiles

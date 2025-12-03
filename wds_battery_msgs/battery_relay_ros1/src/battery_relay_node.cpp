@@ -63,7 +63,7 @@ public:
 };
 
 int main(int argc, char** argv) {
-    ros::init(argc, argv, "battery_relay_node");
+    ros::init(argc, argv, "wds_battery_relay_node");
 
     try {
         BatteryRelay relay;

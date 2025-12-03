@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>battery_relay_ros1</name>
+  <version>1.0.0</version>
+  <description>ROS1 relay node to convert sensor_msgs/BatteryState to wds_battery_msgs/WdsBattery</description>
+
+  <maintainer email="wds@example.com">WDS Team</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>roscpp</depend>
+  <depend>sensor_msgs</depend>
+  <depend>wds_battery_msgs</depend>
+</package>
