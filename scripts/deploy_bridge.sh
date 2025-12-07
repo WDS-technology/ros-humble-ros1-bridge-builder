@@ -257,9 +257,30 @@ if [ "$FULL_DEPLOY" = true ] || [ "$RELAY_ONLY" = true ]; then
     print_info "Detected ROS1 ${ROS1_DISTRO}"
     ROS1_SETUP="/opt/ros/${ROS1_DISTRO}/setup.bash"
 
+    # Check for required build tools
+    print_info "Checking for required build tools..."
+    if ! command -v catkin_make &> /dev/null; then
+        print_error "catkin_make not found. Installing ros-${ROS1_DISTRO}-catkin..."
+        sudo apt-get update
+        sudo apt-get install -y ros-${ROS1_DISTRO}-catkin python3-catkin-tools
+    fi
+
+    if ! command -v cmake &> /dev/null; then
+        print_error "cmake not found. Installing cmake..."
+        sudo apt-get update
+        sudo apt-get install -y cmake build-essential
+    fi
+
     # Create a catkin workspace for ROS1 packages
     print_info "Creating catkin workspace for ROS1 packages..."
     CATKIN_WS="${REPO_ROOT}/wds_battery_msgs/catkin_ws"
+
+    # Clean old workspace if it exists
+    if [ -d "${CATKIN_WS}/build" ] || [ -d "${CATKIN_WS}/devel" ]; then
+        print_info "Cleaning old catkin workspace..."
+        rm -rf "${CATKIN_WS}/build" "${CATKIN_WS}/devel"
+    fi
+
     mkdir -p "${CATKIN_WS}/src"
 
     # Link packages into workspace

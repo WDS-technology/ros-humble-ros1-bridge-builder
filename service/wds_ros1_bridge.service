@@ -1,13 +1,14 @@
 # /etc/systemd/system/wds_ros1_bridge.service
 [Unit]
 Description=ROS 1 ↔ ROS 2 Bridge (Docker Compose)
-After=network.target docker.service corvus_roscore.service
-Requires=docker.service corvus_roscore.service
+After=network.target docker.service 
+Requires=docker.service 
 
 [Service]
 # ‘simple’ is the default; keeping it explicit for clarity
 Type=simple
 WorkingDirectory=/etc/wds/ros_bridge
+
 
 # Run **without -d** so Compose stays in the foreground
 ExecStart=/usr/bin/docker compose up 
