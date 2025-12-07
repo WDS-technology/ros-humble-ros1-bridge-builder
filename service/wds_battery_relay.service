@@ -1,8 +1,7 @@
 # /etc/systemd/system/wds_battery_relay.service
 [Unit]
 Description=WDS Battery Relay Node (ROS1)
-After=network.target 
-
+After=network.target
 
 [Service]
 Type=simple
@@ -10,8 +9,10 @@ User=root
 Environment="ROS_MASTER_URI=http://localhost:11311"
 Environment="ROS_IP=127.0.0.1"
 WorkingDirectory=/home/root
+
 # Wait for roscore to be available (retry for up to 30 seconds)
-ExecStartPre=/bin/bash -c 'for i in {1..30}; do nc -z localhost 11311 && exit 0; sleep 1; done; exit 1'
+ExecStartPre=/bin/bash -c 'source /opt/ros/melodic/setup.bash; for i in {1..30}; do rostopic list >/dev/null 2>&1 && exit 0; sleep 1; done; exit 1'
+
 ExecStart=/bin/bash -c "source /opt/ros/melodic/setup.bash && \
   source /etc/wds/ros_bridge/battery_relay/devel/setup.bash && \
   rosrun battery_relay_ros1 battery_relay_node \
