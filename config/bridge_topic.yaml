@@ -30,7 +30,7 @@ topics:
       durability: volatile
       
 
-  - topic: /corvus/powermodule/battery
+  - topic: /corvus/powermodule_interface/battery
     type: sensor_msgs/msg/BatteryState
     queue_size: 10
     qos:
@@ -109,14 +109,28 @@ topics:
       reliability: reliable
       durability: volatile
       
+  - topic: /corvus/position_estimator/accuracy
+    type:  std_msgs/msg/Float32
+    queue_size: 5
+    qos:
+      reliability: reliable
+      durability: volatile
 
-  - topic: /voxl/qvio/error_code
-    type: "std_msgs/msg/UInt32"
+  - topic: /voxl/vio/error_code
+    type: std_msgs/msg/UInt32
     queue_size: 5
     qos:
       reliability: reliable
       durability: volatile
       
+  - topic: /voxl/vio_json
+    type: std_msgs/msg/String
+    queue_size: 3
+    qos:
+      reliability: reliable
+      durability: volatile
+    
+
 
   - topic: /corvus/cam/hires/CameraInfo
     type: sensor_msgs/msg/CameraInfo
@@ -188,3 +202,149 @@ topics:
       reliability: reliable
       durability: volatile
 
+  - topic: /corvus/navcontrol/control_mode
+    type: std_msgs/msg/String
+    queue_size: 5
+    qos: 
+      reliability: reliable
+      durability: volatile 
+
+  - topic: /corvus/navcontrol/error_position
+    type: geometry_msgs/msg/Vector3
+    queue_size: 5
+    qos: 
+      reliability: reliable
+      durability: volatile 
+
+  - topic: /corvus/navcontrol/error_velocity
+    type: geometry_msgs/msg/Vector3
+    queue_size: 5
+    qos:
+      reliability: reliable
+      durability: volatile 
+
+  - topic: /corvus/navcontrol/error_position_accumulated
+    type: geometry_msgs/msg/Vector3
+    queue_size: 5
+    qos: 
+      reliability: reliable
+      durability: volatile 
+
+  - topic: /corvus/navcontrol/task/current_command
+    type: std_msgs/msg/String
+    queue_size: 2
+    qos: 
+      reliability: reliable
+      durability: volatile 
+
+  - topic: /corvus/watcher/heartbeat
+    type: std_msgs/msg/String
+    queue_size: 5
+    qos: 
+      reliability: reliable
+      durability: volatile 
+
+  - topic: /corvus/error
+    type: std_msgs/msg/String
+    queue_size: 5
+    qos: 
+      reliability: reliable
+      durability: volatile 
+
+  - topic: /corvus/cpu/util
+    type: std_msgs/msg/Float32MultiArray
+    queue_size: 2
+    qos: 
+      reliability: reliable
+      durability: volatile 
+
+  - topic: /corvus/cam/hires/exposure
+    type: std_msgs/msg/Float32
+    queue_size: 5
+    qos: 
+      reliability: reliable
+      durability: volatile 
+
+  - topic: /corvus/cam/hires2/exposure
+    type: std_msgs/msg/Float32
+    queue_size: 5
+    qos: 
+      reliability: reliable
+      durability: volatile 
+
+  - topic: /corvus/cam/tracking_down/exposure
+    type: std_msgs/msg/Float32
+    queue_size: 5
+    qos: 
+      reliability: reliable
+      durability: volatile 
+
+  - topic: /corvus/powermodule_interface/battery/TTF
+    type: std_msgs/msg/Float32
+    queue_size: 5
+    qos: 
+      reliability: reliable
+      durability: volatile 
+
+  - topic: /corvus/powermodule_interface/battery_temp
+    type: std_msgs/msg/Float32
+    queue_size: 5
+    qos: 
+      reliability: reliable
+      durability: volatile 
+
+  - topic: /corvus/powermodule_interface/flight_time
+    type: std_msgs/msg/Float32
+    queue_size: 5
+    qos: 
+      reliability: reliable
+      durability: volatile 
+
+  - topic: /voxl/pose/fixed
+    type: geometry_msgs/msg/PoseStamped
+    queue_size: 10
+    qos: 
+      reliability: reliable
+      durability: volatile 
+
+  - topic: /voxl/twist/local
+    type: geometry_msgs/msg/TwistStamped
+    queue_size: 10
+    qos: 
+      reliability: reliable
+      durability: volatile 
+
+  - topic: /voxl/twist/fixed
+    type: geometry_msgs/msg/TwistStamped
+    queue_size: 10
+    qos: 
+      reliability: reliable
+      durability: volatile 
+
+  - topic: /voxl/imu
+    type: sensor_msgs/msg/Imu
+    queue_size: 10
+    qos: 
+      reliability: reliable
+      durability: volatile 
+
+  - topic: /mavros/imu/data
+    type: sensor_msgs/msg/Imu
+    queue_size: 10
+    qos: 
+      reliability: reliable
+      durability: volatile 
+
+  - topic: /mavros/local_position/odom
+    type: nav_msgs/msg/Odometry
+    queue_size: 10
+    qos: 
+      reliability: reliable
+      durability: volatile 
+  
+  - topic: /diagnostics
+    type: diagnostic_msgs/msg/DiagnosticArray
+    queue_size: 10
+    qos: 
+      reliability: best_effort
+      durability: volatile 
