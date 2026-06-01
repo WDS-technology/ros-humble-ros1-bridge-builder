@@ -101,14 +101,11 @@ ARG ADD_grid_map=0
 # for a custom message example
 ARG ADD_example_custom_msgs=0
 
-# for WDS battery messages
-ARG ADD_wds_battery_msgs=0
 
 # sanity check:
 RUN echo "ADD_ros_tutorials         = '$ADD_ros_tutorials'"
 RUN echo "ADD_grid_map              = '$ADD_grid_map'"
 RUN echo "ADD_example_custom_msgs   = '$ADD_example_custom_msgs'"
-RUN echo "ADD_wds_battery_msgs      = '$ADD_wds_battery_msgs'"
 
 ###########################
 # 8.1) Add additional ros_tutorials messages and services
@@ -174,7 +171,7 @@ RUN if [[ "$ADD_grid_map" = "1" ]]; then                                        
 #   Note1: Make sure the package name ends with "_msgs".
 #   Note2: Use the same package name for both ROS1 and ROS2.
 #   See https://github.com/ros2/ros1_bridge/blob/master/doc/index.rst
-######################################
+#####################################
 RUN if [[ "$ADD_example_custom_msgs" = "1" ]]; then                     \
       git clone https://github.com/TommyChangUMD/custom_msgs.git;       \
       # Compile ROS1:                                                   \
@@ -187,25 +184,6 @@ RUN if [[ "$ADD_example_custom_msgs" = "1" ]]; then                     \
       time colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release;        \
     fi
 
-######################################
-# 8.4) Compile WDS battery messages
-#   Note1: Package name ends with "_msgs" as required.
-#   Note2: Same package name (wds_battery_msgs) for both ROS1 and ROS2.
-######################################
-COPY wds_battery_msgs /wds_battery_msgs
-# Force rebuild from here (cache bust)
-ARG CACHEBUST=1
-RUN echo "Cache bust: $CACHEBUST"
-RUN if [[ "$ADD_wds_battery_msgs" = "1" ]]; then                        \
-      # Compile ROS1:                                                   \
-      cd /wds_battery_msgs/wds_battery_msgs_ros1;                       \
-      unset ROS_DISTRO;                                                 \
-      time colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release;        \
-      # Compile ROS2:                                                   \
-      cd /wds_battery_msgs/wds_battery_msgs_ros2;                       \
-      source /opt/ros/humble/setup.bash;                                \
-      time colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release;        \
-    fi
 
 ###########################
 # 9.) Compile ros1_bridge
@@ -241,14 +219,7 @@ RUN                                                                             
       # Apply ROS2 package overlay                                              \
       source /custom_msgs/custom_msgs_ros2/install/setup.bash;                  \
     fi;                                                                         \
-    #                                                                           \
-    if [[ "$ADD_wds_battery_msgs" = "1" ]]; then                                \
-      # Apply ROS1 package overlay                                              \
-      source /wds_battery_msgs/wds_battery_msgs_ros1/install/setup.bash;        \
-      # Apply ROS2 package overlay                                              \
-      source /wds_battery_msgs/wds_battery_msgs_ros2/install/setup.bash;        \
-    fi;                                                                         \
-    #                                                                           \
+                                              \
     #-------------------------------------                                      \
     # Finally, build the Bridge                                                 \
     #-------------------------------------                                      \

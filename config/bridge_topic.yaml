@@ -195,13 +195,6 @@ topics:
     type: std_msgs/msg/Bool
     queue_size: 5
 
-  - topic: /wds/battery
-    type: wds_battery_msgs/msg/WdsBattery
-    queue_size: 10
-    qos:
-      reliability: reliable
-      durability: volatile
-
   - topic: /corvus/navcontrol/control_mode
     type: std_msgs/msg/String
     queue_size: 5

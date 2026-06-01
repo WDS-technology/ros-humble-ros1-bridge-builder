@@ -2,7 +2,7 @@ version: '3'
 
 services:
   ros1_bridge:
-    image: wdsdrones/wds_ros1_to_ros2_humble_bridge:latest_battery
+    image: wdsdrones/wds_ros1_to_ros2_humble_bridge:deploy
     volumes:
       - /etc/wds/ros_bridge/:/home/topics
         
@@ -19,10 +19,7 @@ services:
     command: >
       bash -c "
       source /opt/ros/humble/setup.bash &&
-      source /wds_battery_msgs/wds_battery_msgs_ros1/install/setup.bash &&
-      source /wds_battery_msgs/wds_battery_msgs_ros2/install/setup.bash &&
       source /ros-humble-ros1-bridge/install/setup.bash &&
-
       rosparam load /home/topics/config/bridge_topic.yaml &&
       ros2 run ros1_bridge parameter_bridge"
 
