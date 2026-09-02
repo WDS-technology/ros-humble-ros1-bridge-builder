@@ -23,7 +23,7 @@ services:
       rosparam load /home/topics/config/bridge_topic.yaml &&
       ros2 run ros1_bridge parameter_bridge"
 
-    restart: unless-stopped
+    restart: "no"
     network_mode: "host"
     privileged: true
 
